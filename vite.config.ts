@@ -13,7 +13,8 @@ export default defineConfig({
       // Use src/server.ts (our SSR error wrapper) as the server entry.
       server: { entry: "server" },
     }),
-    nitro({ preset: "node-server" }),
+    // Preset is auto-detected: node-server locally, vercel on Vercel.
+    nitro(),
     viteReact(),
     tailwindcss(),
   ],

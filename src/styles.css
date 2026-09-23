@@ -1,0 +1,105 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Mise en Place — editorial design system.
+ * Warm paper background, deep oxblood accent, serif display + clean sans.
+ * All colors are oklch. Never hardcode colors in components.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 3px);
+  --radius-md: calc(var(--radius) - 1px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-olive: var(--olive);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-rule: var(--rule);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --radius: 0.25rem;
+  --background: oklch(0.968 0.014 85);
+  --foreground: oklch(0.235 0.018 55);
+  --paper: oklch(0.988 0.008 90);
+  --card: oklch(0.988 0.008 90);
+  --card-foreground: oklch(0.235 0.018 55);
+  --popover: oklch(0.988 0.008 90);
+  --popover-foreground: oklch(0.235 0.018 55);
+  --primary: oklch(0.41 0.129 28);
+  --primary-foreground: oklch(0.98 0.01 85);
+  --secondary: oklch(0.93 0.018 82);
+  --secondary-foreground: oklch(0.3 0.02 55);
+  --muted: oklch(0.938 0.014 84);
+  --muted-foreground: oklch(0.505 0.022 60);
+  --accent: oklch(0.41 0.129 28);
+  --accent-foreground: oklch(0.98 0.01 85);
+  --olive: oklch(0.5 0.058 118);
+  --destructive: oklch(0.51 0.17 25);
+  --destructive-foreground: oklch(0.98 0.01 85);
+  --border: oklch(0.878 0.016 80);
+  --rule: oklch(0.82 0.02 76);
+  --input: oklch(0.878 0.016 80);
+  --ring: oklch(0.41 0.129 28);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+  }
+}
+
+@utility label-caps {
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+@utility printed {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 0 0 var(--color-border);
+}
+
+@utility rule-line {
+  border-top: 1px solid var(--color-rule);
+}

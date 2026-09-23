@@ -17,3 +17,9 @@ Trip planner built around restaurants. TanStack Start (React 19 + SSR server fun
 
 ## Environment
 - `GOOGLE_MAPS_API_KEY` in `.env` (server-only; never expose via `VITE_`). `.env` is gitignored; template in `.env.example`.
+
+## Deployment
+- GitHub: https://github.com/AlejandraLlanza/mise-en-place (public — never commit secrets).
+- Vercel project `mise-en-place` auto-deploys every push to `main` → https://mise-en-place-alejandra-c11d.vercel.app
+- Nitro auto-detects the `vercel` preset there; don't hardcode a preset in `vite.config.ts`.
+- `GOOGLE_MAPS_API_KEY` is set in Vercel project env vars; changing it needs a redeploy.

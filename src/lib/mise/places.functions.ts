@@ -1,7 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
+const PLACES_URL = "https://places.googleapis.com/v1";
+const TIMEZONE_URL = "https://maps.googleapis.com/maps/api/timezone/json";
+const WEATHER_URL = "https://weather.googleapis.com/v1";
+
+/** Server-only Google Maps Platform key (Places API (New), Time Zone, Weather). */
+function mapsKey(): string | null {
+  return process.env["GOOGLE_MAPS_API_KEY"] || null;
+}
+
+function requireMapsKey(): string {
+  const key = mapsKey();
+  if (!key) throw new Error("Google Maps is not connected.");
+  return key;
+}
 
 const FIELD_MASK = [
   "places.id",
@@ -138,22 +151,17 @@ function toPlace(p: RawPlace, i: number): PlaceData {
 export const searchRestaurants = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => input.parse(data))
   .handler(async ({ data }): Promise<PlaceData[]> => {
-    const lovableKey = process.env["LOVABLE_API_KEY"];
-    const mapsKey = process.env["GOOGLE_MAPS_API_KEY"];
-    if (!lovableKey || !mapsKey) {
-      throw new Error("Google Maps is not connected.");
-    }
+    const key = requireMapsKey();
 
     const hint = data.kind === "restaurant" ? " restaurant" : "";
     const textQuery = data.city
       ? `${data.query}${hint} ${data.city}`
       : data.query;
 
-    const res = await fetch(`${GATEWAY_URL}/places/v1/places:searchText`, {
+    const res = await fetch(`${PLACES_URL}/places:searchText`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "X-Connection-Api-Key": mapsKey,
+        "X-Goog-Api-Key": key,
         "Content-Type": "application/json",
         "X-Goog-FieldMask": FIELD_MASK,
       },
@@ -188,17 +196,15 @@ const localNameInput = z.object({ placeId: z.string().min(3).max(200) });
 export const lookupLocalName = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => localNameInput.parse(data))
   .handler(async ({ data }): Promise<string | null> => {
-    const lovableKey = process.env["LOVABLE_API_KEY"];
-    const mapsKey = process.env["GOOGLE_MAPS_API_KEY"];
-    if (!lovableKey || !mapsKey) return null;
+    const key = mapsKey();
+    if (!key) return null;
 
     // No languageCode: Google answers in the place's own language.
     const res = await fetch(
-      `${GATEWAY_URL}/places/v1/places/${encodeURIComponent(data.placeId)}`,
+      `${PLACES_URL}/places/${encodeURIComponent(data.placeId)}`,
       {
         headers: {
-          Authorization: `Bearer ${lovableKey}`,
-          "X-Connection-Api-Key": mapsKey,
+          "X-Goog-Api-Key": key,
           "X-Goog-FieldMask": "displayName",
         },
       },
@@ -224,17 +230,12 @@ const nearbyInput = z.object({
 export const searchNearbyPlaces = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => nearbyInput.parse(data))
   .handler(async ({ data }): Promise<PlaceData[]> => {
-    const lovableKey = process.env["LOVABLE_API_KEY"];
-    const mapsKey = process.env["GOOGLE_MAPS_API_KEY"];
-    if (!lovableKey || !mapsKey) {
-      throw new Error("Google Maps is not connected.");
-    }
+    const key = requireMapsKey();
 
-    const res = await fetch(`${GATEWAY_URL}/places/v1/places:searchNearby`, {
+    const res = await fetch(`${PLACES_URL}/places:searchNearby`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "X-Connection-Api-Key": mapsKey,
+        "X-Goog-Api-Key": key,
         "Content-Type": "application/json",
         "X-Goog-FieldMask": FIELD_MASK,
       },
@@ -274,20 +275,10 @@ const tzInput = z.object({
 export const lookupTimeZone = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => tzInput.parse(data))
   .handler(async ({ data }): Promise<string | null> => {
-    const lovableKey = process.env["LOVABLE_API_KEY"];
-    const mapsKey = process.env["GOOGLE_MAPS_API_KEY"];
-    if (!lovableKey || !mapsKey) {
-      throw new Error("Google Maps is not connected.");
-    }
+    const key = requireMapsKey();
     const stamp = Math.floor(Date.now() / 1000);
     const res = await fetch(
-      `${GATEWAY_URL}/maps/api/timezone/json?location=${data.lat},${data.lng}&timestamp=${stamp}`,
-      {
-        headers: {
-          Authorization: `Bearer ${lovableKey}`,
-          "X-Connection-Api-Key": mapsKey,
-        },
-      },
+      `${TIMEZONE_URL}?location=${data.lat},${data.lng}&timestamp=${stamp}&key=${encodeURIComponent(key)}`,
     );
     if (!res.ok) {
       const body = await res.text();
@@ -425,19 +416,12 @@ async function openMeteoForecast(
 export const lookupForecast = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => weatherInput.parse(data))
   .handler(async ({ data }): Promise<ForecastPayload> => {
-    const lovableKey = process.env["LOVABLE_API_KEY"];
-    const mapsKey = process.env["GOOGLE_MAPS_API_KEY"];
-    if (!lovableKey || !mapsKey) {
-      throw new Error("Google Maps is not connected.");
-    }
-    const headers = {
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": mapsKey,
-    };
+    const key = requireMapsKey();
+    const headers = { "X-Goog-Api-Key": key };
     const loc = `location.latitude=${data.lat}&location.longitude=${data.lng}`;
 
     const get = async (path: string): Promise<Record<string, unknown> | null> => {
-      const res = await fetch(`${GATEWAY_URL}/weather/v1/${path}`, { headers });
+      const res = await fetch(`${WEATHER_URL}/${path}`, { headers });
       if (res.status === 404) {
         // Google has no forecast for this place — fall back to monthly typical.
         return null;
